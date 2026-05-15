@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { translateToHindi, synthesizeSpeech, translateAudioToHindi, translateVideoToHindi } from './services/geminiService';
-import { Mic, Languages, Play, Loader2, RefreshCw, FileText, Download, UploadCloud, FileAudio, FileVideo } from 'lucide-react';
+import { Mic, Languages, Play, Loader2, RefreshCw, FileText, Download, UploadCloud, FileAudio, FileVideo, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const VOICES = [
@@ -33,6 +33,27 @@ export default function App() {
   const [videoHindiText, setVideoHindiText] = useState('');
 
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
+
+  const handlePreviewVoice = async () => {
+    if (previewingVoice) return;
+    setPreviewingVoice(selectedVoice);
+    try {
+      const sampleText = "नमस्ते, यह मेरी आवाज़ का एक नमूना है।";
+      const base64Audio = await synthesizeSpeech(sampleText, selectedVoice);
+      if (base64Audio) {
+        const audioDataUrl = createWavFileFromBase64(base64Audio, 24000);
+        const audio = new Audio(audioDataUrl);
+        audio.play();
+      }
+    } catch (error) {
+      console.error('Preview error:', error);
+      alert('Failed to play preview.');
+    } finally {
+      setPreviewingVoice(null);
+    }
+  };
 
   const handleTranslate = async () => {
     if (!englishText.trim()) return;
@@ -197,10 +218,10 @@ export default function App() {
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2 gap-4">
-            <div className="flex-1 max-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 gap-4">
+            <div className="flex-1 sm:max-w-[250px] flex gap-2">
               <select
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-full px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 appearance-none cursor-pointer"
+                className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 appearance-none cursor-pointer"
                 value={selectedVoice}
                 onChange={(e) => setSelectedVoice(e.target.value)}
               >
@@ -208,12 +229,20 @@ export default function App() {
                   <option key={voice.id} value={voice.id}>{voice.name}</option>
                 ))}
               </select>
+              <button
+                onClick={handlePreviewVoice}
+                disabled={previewingVoice !== null}
+                className="p-3 shrink-0 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center"
+                title="Preview Voice"
+              >
+                {previewingVoice === selectedVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Volume2 className="w-4 h-4" />}
+              </button>
             </div>
             
             <button
               onClick={() => handleDub(hindiText)}
               disabled={isSynthesizing || !hindiText.trim()}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(234,88,12,0.3)] hover:shadow-[0_0_20px_rgba(234,88,12,0.5)]"
+              className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(234,88,12,0.3)] hover:shadow-[0_0_20px_rgba(234,88,12,0.5)] w-full sm:w-auto"
             >
               {isSynthesizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
               Generate Voiceover
@@ -297,10 +326,10 @@ export default function App() {
              />
           </div>
 
-          <div className="flex items-center justify-between pt-2 gap-4">
-            <div className="flex-1 max-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 gap-4">
+            <div className="flex-1 sm:max-w-[250px] flex gap-2">
               <select
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-full px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 appearance-none cursor-pointer"
+                className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 appearance-none cursor-pointer"
                 value={selectedVoice}
                 onChange={(e) => setSelectedVoice(e.target.value)}
               >
@@ -308,12 +337,20 @@ export default function App() {
                   <option key={voice.id} value={voice.id}>{voice.name}</option>
                 ))}
               </select>
+              <button
+                onClick={handlePreviewVoice}
+                disabled={previewingVoice !== null}
+                className="p-3 shrink-0 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center"
+                title="Preview Voice"
+              >
+                {previewingVoice === selectedVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Volume2 className="w-4 h-4" />}
+              </button>
             </div>
             
             <button
               onClick={() => handleDub(audioHindiText)}
               disabled={isSynthesizing || !audioHindiText.trim() || isTranscribing}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(234,88,12,0.3)] hover:shadow-[0_0_20px_rgba(234,88,12,0.5)]"
+              className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(234,88,12,0.3)] hover:shadow-[0_0_20px_rgba(234,88,12,0.5)] w-full sm:w-auto"
             >
               {isSynthesizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
               Generate Voiceover
@@ -394,10 +431,10 @@ export default function App() {
              />
           </div>
 
-          <div className="flex items-center justify-between pt-2 gap-4">
-            <div className="flex-1 max-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 gap-4">
+            <div className="flex-1 sm:max-w-[250px] flex gap-2">
               <select
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-full px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 appearance-none cursor-pointer"
+                className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 appearance-none cursor-pointer"
                 value={selectedVoice}
                 onChange={(e) => setSelectedVoice(e.target.value)}
               >
@@ -405,12 +442,20 @@ export default function App() {
                   <option key={voice.id} value={voice.id}>{voice.name}</option>
                 ))}
               </select>
+              <button
+                onClick={handlePreviewVoice}
+                disabled={previewingVoice !== null}
+                className="p-3 shrink-0 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center"
+                title="Preview Voice"
+              >
+                {previewingVoice === selectedVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Volume2 className="w-4 h-4" />}
+              </button>
             </div>
             
             <button
               onClick={() => handleDub(videoHindiText)}
               disabled={isSynthesizing || !videoHindiText.trim() || isVideoTranscribing}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(234,88,12,0.3)] hover:shadow-[0_0_20px_rgba(234,88,12,0.5)]"
+              className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(234,88,12,0.3)] hover:shadow-[0_0_20px_rgba(234,88,12,0.5)] w-full sm:w-auto"
             >
               {isSynthesizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
               Generate Voiceover
