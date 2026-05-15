@@ -1,0 +1,8 @@
+{
+  "name": "DocuDub",
+  "description": "English to Hindi voice dubbing app for documentaries.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
